@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECOLIFT ERP - Sistema de Control de Inventario y Manufactura</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0fdf4', 100: '#dcfce7', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' },
+                        erp: { dark: '#0f172a', navy: '#1e293b', accent: '#4f46e5', accentHover: '#4338ca' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Header Principal -->
+    <header class="bg-erp-dark text-white sticky top-0 z-30 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-emerald-500 text-slate-900 p-2 rounded-lg font-bold text-xl flex items-center justify-center w-10 h-10 shadow-lg">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight text-emerald-400">ECOLIFT ERP</h1>
+                        <p class="text-xs text-slate-400 font-medium">Sistemas de Manufactura &amp; MES/IIoT</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <span class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800">
+                        <span class="w-2 h-2 mr-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Base de Datos MySQL Conectada
+                    </span>
+                    <button onclick="resetData()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md border border-slate-700 transition">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Reiniciar Datos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Subheader KPI Bar -->
+    <section class="bg-erp-navy border-b border-slate-700 text-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center md:text-left">
+                <div class="p-2 rounded bg-slate-800/60 border border-slate-700/50">
+                    <p id="header-batch-label" class="text-xs text-slate-400 uppercase font-semibold">Producto Piloto (Lote 5 uds)</p>
+                    <p class="text-sm font-bold text-emerald-400 truncate">ECOLIFT DUAL</p>
+                </div>
+                <div class="p-2 rounded bg-slate-800/60 border border-slate-700/50">
+                    <p class="text-xs text-slate-400 uppercase font-semibold">First Pass Yield (FPY)</p>
+                    <p id="header-kpi-fpy" class="text-sm font-bold text-cyan-400">--</p>
+                </div>
+                <div class="p-2 rounded bg-slate-800/60 border border-slate-700/50">
+                    <p class="text-xs text-slate-400 uppercase font-semibold">Efectividad OEE</p>
+                    <p id="header-kpi-oee" class="text-sm font-bold text-indigo-400">--</p>
+                </div>
+                <div class="p-2 rounded bg-slate-800/60 border border-slate-700/50">
+                    <p class="text-xs text-slate-400 uppercase font-semibold">Costo Estándar / Real</p>
+                    <p id="header-kpi-cost" class="text-sm font-bold text-amber-400">--</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Tab Navigation Bar (6 Pestañas Operativas Limpias) -->
+        <div class="flex border-b border-slate-200 overflow-x-auto custom-scrollbar mb-6 bg-white rounded-t-xl p-1 shadow-sm border">
+            <button onclick="switchTab('catalog')" id="tab-btn-catalog" class="tab-btn flex-1 min-w-[130px] py-3 px-3 text-center text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 flex items-center justify-center space-x-2 text-indigo-600 bg-indigo-50 border border-indigo-200">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <span>Catálogo &amp; BOM</span>
+            </button>
+            <button onclick="switchTab('po')" id="tab-btn-po" class="tab-btn flex-1 min-w-[130px] py-3 px-3 text-center text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 flex items-center justify-center space-x-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span>Compras (PO)</span>
+            </button>
+            <button onclick="switchTab('mo')" id="tab-btn-mo" class="tab-btn flex-1 min-w-[130px] py-3 px-3 text-center text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 flex items-center justify-center space-x-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+                <i class="fa-solid fa-industry"></i>
+                <span>Manufactura (MO)</span>
+            </button>
+            <button onclick="switchTab('sales')" id="tab-btn-sales" class="tab-btn flex-1 min-w-[130px] py-3 px-3 text-center text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 flex items-center justify-center space-x-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span>Ventas &amp; Despacho</span>
+            </button>
+            <button onclick="switchTab('lots')" id="tab-btn-lots" class="tab-btn flex-1 min-w-[130px] py-3 px-3 text-center text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 flex items-center justify-center space-x-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+                <i class="fa-solid fa-barcode"></i>
+                <span>Trazabilidad / Lotes</span>
+            </button>
+            <button onclick="switchTab('mes')" id="tab-btn-mes" class="tab-btn flex-1 min-w-[130px] py-3 px-3 text-center text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 flex items-center justify-center space-x-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-50">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>MES, OEE &amp; Calidad</span>
+            </button>
+        </div>
+
+        <!-- Notification Toast Container -->
+        <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col space-y-2"></div>
+
+        <!-- TAB 1: CATÁLOGO DE PRODUCTOS & BOM -->
+        <section id="tab-catalog" class="tab-content">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Catálogo de Productos y Estructura BOM Multinivel</h2>
+                    <p class="text-sm text-slate-500">Gestión de datos maestros almacenados en MySQL para ECOLIFT DUAL, subensambles y materias primas.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="openModal('modal-create-product')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center space-x-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Nuevo Producto / Insumo</span>
+                    </button>
+                    <button onclick="openModal('modal-bom-view')" class="bg-erp-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center space-x-2">
+                        <i class="fa-solid fa-sitemap"></i>
+                        <span>Ver Estructura ISA-95 (BOM)</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
+                                <th class="py-3.5 px-4">ID / Código ERP</th>
+                                <th class="py-3.5 px-4">Producto / Componente</th>
+                                <th class="py-3.5 px-4">Tipo ISA-95</th>
+                                <th class="py-3.5 px-4 text-right">Costo Estándar</th>
+                                <th class="py-3.5 px-4 text-right">Costo Real</th>
+                                <th class="py-3.5 px-4 text-center">Stock Actual</th>
+                                <th class="py-3.5 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Matriz de Explosión y Costeo BOM Multinivel con Selector Variable de Tamaño de Lote -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+                <div class="p-4 bg-slate-900 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h3 class="font-bold text-sm text-emerald-400"><i class="fa-solid fa-sitemap mr-1.5"></i>Matriz de Explosión y Costeo BOM Multinivel (3 Niveles)</h3>
+                        <p class="text-xs text-slate-300">Cálculo automático de cantidades y costos según los productos registrados y el tamaño de lote seleccionado.</p>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <label for="bom-batch-size-input" class="text-xs font-semibold text-slate-200">Tamaño de Lote Base:</label>
+                        <input type="number" id="bom-batch-size-input" min="1" step="1" value="5" oninput="updateBatchSize(this.value)" class="w-16 bg-slate-950 text-emerald-400 font-bold text-center text-sm rounded border border-emerald-600 px-2 py-0.5 focus:outline-none">
+                        <span class="text-xs text-slate-300">unidades</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 border-b-2 border-slate-300 text-slate-700 font-bold uppercase">
+                                <th class="py-2.5 px-3">Nivel BOM</th>
+                                <th class="py-2.5 px-3">Código SKU</th>
+                                <th class="py-2.5 px-3">Descripción del Ítem / Componente</th>
+                                <th class="py-2.5 px-3">Padre Directo</th>
+                                <th class="py-2.5 px-3 text-right">Cant. / Unid.</th>
+                                <th class="py-2.5 px-3">Unidad</th>
+                                <th class="py-2.5 px-3 text-right">Costo Unit. (C$)</th>
+                                <th class="py-2.5 px-3 text-right">Subtotal Estándar (C$)</th>
+                                <th id="bom-col-lot-header" class="py-2.5 px-3 text-right">Cant. por Lote (5 u.)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bom-matrix-body" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: ÓRDENES DE COMPRA (PO & WH/IN) -->
+        <section id="tab-po" class="tab-content hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Órdenes de Compra (PO) y Recepciones (WH/IN)</h2>
+                    <p class="text-sm text-slate-500">Aprovisionamiento de materia prima para el taller con trazabilidad por lote.</p>
+                </div>
+                <button onclick="openModal('modal-create-po')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nueva Orden de Compra (PO)</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
+                                <th class="py-3.5 px-4">Código PO</th>
+                                <th class="py-3.5 px-4">Proveedor</th>
+                                <th class="py-3.5 px-4">Material Adquirido</th>
+                                <th class="py-3.5 px-4 text-center">Cantidad</th>
+                                <th class="py-3.5 px-4">Recepción (WH/IN)</th>
+                                <th class="py-3.5 px-4 text-center">Estado</th>
+                                <th class="py-3.5 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="po-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ÓRDENES DE FABRICACIÓN (WH/MO) -->
+        <section id="tab-mo" class="tab-content hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Órdenes de Fabricación (WH/MO)</h2>
+                    <p class="text-sm text-slate-500">Lanzamiento de producción por lotes y descuento automático de subensambles y materias primas según la BOM.</p>
+                </div>
+                <button onclick="openModal('modal-create-mo')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center space-x-2">
+                    <i class="fa-solid fa-gears"></i>
+                    <span>Crear Orden de Producción (MO)</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
+                                <th class="py-3.5 px-4">Código MO</th>
+                                <th class="py-3.5 px-4">Producto a Fabricar</th>
+                                <th class="py-3.5 px-4 text-center">Lote Cantidad</th>
+                                <th class="py-3.5 px-4">Lote Producido</th>
+                                <th class="py-3.5 px-4 text-center">Estado Componentes</th>
+                                <th class="py-3.5 px-4 text-center">Estado MO</th>
+                                <th class="py-3.5 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mo-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: VENTAS Y DESPACHO A CLIENTES (SO & WH/OUT) -->
+        <section id="tab-sales" class="tab-content hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Órdenes de Venta (SO) y Despacho a Clientes (WH/OUT)</h2>
+                    <p class="text-sm text-slate-500">Cierre del flujo comercial con reserva de lote fabricado, salida de almacén y registro de venta.</p>
+                </div>
+                <button onclick="openModal('modal-create-so')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center space-x-2">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                    <span>Nueva Orden de Venta (SO)</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
+                                <th class="py-3.5 px-4">Código SO</th>
+                                <th class="py-3.5 px-4">Cliente</th>
+                                <th class="py-3.5 px-4">Producto</th>
+                                <th class="py-3.5 px-4">Lote Despachado</th>
+                                <th class="py-3.5 px-4 text-center">Cantidad</th>
+                                <th class="py-3.5 px-4 text-right">Total Venta</th>
+                                <th class="py-3.5 px-4">Albarán (WH/OUT)</th>
+                                <th class="py-3.5 px-4 text-center">Estado</th>
+                                <th class="py-3.5 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="so-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: TRAZABILIDAD Y LOTES -->
+        <section id="tab-lots" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Trazabilidad por Lotes (Stock Lots)</h2>
+                    <p class="text-sm text-slate-500">Registro de auditoría física de entradas WH/IN y producción WH/MO vinculadas al ECOLIFT DUAL.</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
+                                <th class="py-3.5 px-4">N&deg; de Lote</th>
+                                <th class="py-3.5 px-4">Producto</th>
+                                <th class="py-3.5 px-4 text-center">Cantidad en Lote</th>
+                                <th class="py-3.5 px-4">Documento Origen</th>
+                                <th class="py-3.5 px-4">Fecha y Hora</th>
+                                <th class="py-3.5 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lots-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: MES, OEE Y CALIDAD (LIMPIA SIN CÓDIGOS TÉCNICOS NI JSON) -->
+        <section id="tab-mes" class="tab-content hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Módulo MES: Indicadores OEE, FPY y Control de Calidad</h2>
+                    <p class="text-sm text-slate-500">Monitoreo operativo de la cabina de secado, tiempos reales y registro de no conformidades.</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="toggleScadaHighHumidity()" class="bg-slate-800 hover:bg-slate-900 text-amber-300 px-3 py-2 rounded-lg text-xs font-medium shadow flex items-center space-x-1.5">
+                        <i class="fa-solid fa-cloud-rain"></i>
+                        <span>Simular Variación Climática</span>
+                    </button>
+                    <button onclick="openModal('modal-quality-check')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow flex items-center space-x-2">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        <span>Registrar Inspección Calidad</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center space-x-2">
+                        <i class="fa-solid fa-gauge text-indigo-600"></i>
+                        <span>Factores OEE (Taladro / Fresadora)</span>
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <div class="flex justify-between font-semibold mb-1">
+                                <span>Disponibilidad (Paros de máquina)</span>
+                                <span id="mes-oee-avail-val">--</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="mes-oee-avail-bar" class="bg-indigo-600 h-full transition-all duration-300" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between font-semibold mb-1">
+                                <span>Rendimiento (Velocidad vs Estándar)</span>
+                                <span id="mes-oee-perf-val">--</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="mes-oee-perf-bar" class="bg-indigo-500 h-full transition-all duration-300" style="width: 95%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between font-semibold mb-1">
+                                <span>Calidad Efectiva y FPY</span>
+                                <span id="mes-oee-qual-val">--</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="mes-oee-qual-bar" class="bg-emerald-500 h-full transition-all duration-300" style="width: 98.1%"></div>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-100 flex justify-between items-center font-bold text-sm text-slate-900">
+                            <span>OEE Global Calculado:</span>
+                            <span id="mes-oee-global-val" class="text-indigo-600 text-base">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center space-x-2">
+                        <i class="fa-solid fa-temperature-arrow-up text-amber-500"></i>
+                        <span>Monitoreo Cabina de Secado (SCADA)</span>
+                    </h3>
+                    <div class="space-y-2.5 text-xs text-slate-600">
+                        <div class="flex justify-between bg-slate-50 p-2.5 rounded">
+                            <span>Temperatura Actual:</span>
+                            <span id="scada-temp-val" class="font-bold text-slate-800">32.5 &deg;C</span>
+                        </div>
+                        <div class="flex justify-between bg-slate-50 p-2.5 rounded">
+                            <span>Humedad Relativa:</span>
+                            <span id="scada-hum-val" class="font-bold text-slate-800">55.2 %</span>
+                        </div>
+                        <div class="flex justify-between bg-slate-50 p-2.5 rounded">
+                            <span>Estado de Lote en Cabina:</span>
+                            <span id="scada-cabin-status" class="font-bold text-emerald-600">Secado Activo (Lote 5 uds)</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 italic pt-1">Supervisión ambiental en tiempo real de la etapa de barnizado y curado.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center space-x-2">
+                        <i class="fa-solid fa-coins text-emerald-600"></i>
+                        <span>Control Financiero de Costos</span>
+                    </h3>
+                    <div class="space-y-2.5 text-xs text-slate-600">
+                        <div class="flex justify-between bg-slate-50 p-2.5 rounded">
+                            <span>Costo Unitario Teórico (BOM):</span>
+                            <span id="mes-cost-std" class="font-bold text-slate-800">--</span>
+                        </div>
+                        <div class="flex justify-between bg-slate-50 p-2.5 rounded">
+                            <span>Costo Real (Con Mermas):</span>
+                            <span id="mes-cost-real" class="font-bold text-emerald-600">--</span>
+                        </div>
+                        <div class="flex justify-between bg-slate-50 p-2.5 rounded">
+                            <span>Desviación Controlada:</span>
+                            <span id="mes-cost-diff" class="font-bold text-indigo-600">--</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 italic pt-1">Calculado dinámicamente a partir de los costos vigentes en almacén.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Inspecciones de Calidad -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-sm text-slate-700">
+                    Registro de Incidencias y No Conformidades (Control de Calidad)
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
+                                <th class="py-3 px-4">ID Inspección</th>
+                                <th class="py-3 px-4">Lote Evaluado</th>
+                                <th class="py-3 px-4 text-center">1ra Vuelta (FPY)</th>
+                                <th class="py-3 px-4">Defecto Detectado</th>
+                                <th class="py-3 px-4 text-center">Clasificación</th>
+                                <th class="py-3 px-4">Disposición Aplicada</th>
+                                <th class="py-3 px-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quality-table-body" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            ECOLIFT Dual/Solo/Pro &copy; 2026 - Sistema ERP para Control de Manufactura. Proyecto Académico UNI.
+        </div>
+    </footer>
+
+    <!-- MODAL: Estructura BOM ISA-95 Dinámica -->
+    <div id="modal-bom-view" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200">
+            <div class="bg-erp-dark text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center space-x-2">
+                    <i class="fa-solid fa-sitemap text-emerald-400"></i>
+                    <span>Estructura Multinivel BOM (ISA-95) - ECOLIFT DUAL</span>
+                </h3>
+                <button onclick="closeModal('modal-bom-view')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-xs text-indigo-900">
+                    <span class="font-bold">Estructura Dinámica Multinivel:</span> Cualquier insumo o subensamble nuevo que agregues al catálogo asociándolo a un padre aparece automáticamente en este árbol y en la Matriz BOM.
+                </div>
+                <div id="bom-modal-dynamic-tree" class="space-y-3"></div>
+            </div>
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 text-right">
+                <button onclick="closeModal('modal-bom-view')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded text-xs font-medium">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Crear Nuevo Producto / Materia Prima (Con Asociación Dinámica a la BOM) -->
+    <div id="modal-create-product" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-erp-dark text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base">Registrar Nuevo Producto o Materia Prima</h3>
+                <button onclick="closeModal('modal-create-product')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-create-product" onsubmit="submitNewProduct(event)" class="p-6 space-y-3.5">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Código SKU</label>
+                        <input type="text" id="prod-code" placeholder="Ej. MP-LIJA" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Unidad Medida</label>
+                        <input type="text" id="prod-unit" value="pz" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Nombre del Material / Componente</label>
+                    <input type="text" id="prod-name" placeholder="Ej. Pliego de Lija Grano 220" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tipo ISA-95</label>
+                        <select id="prod-type" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="RAW_MATERIAL">Materia Prima</option>
+                            <option value="SUBASSEMBLY">Subensamble</option>
+                            <option value="FINISHED_GOOD">Producto Terminado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Costo Unitario (C$)</label>
+                        <input type="number" id="prod-cost" min="0" step="0.5" value="15.00" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Integrar en BOM (Padre)</label>
+                        <select id="prod-parent-bom" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cant. por Unidad Padre</label>
+                        <input type="number" id="prod-bom-qty" min="0.01" step="0.05" value="1.00" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Stock Inicial en Almacén</label>
+                    <input type="number" id="prod-stock" min="0" step="0.5" value="25" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-create-product')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-xs font-medium shadow">Guardar en Base de Datos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Ajustar Stock y Costos -->
+    <div id="modal-edit-stock" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-erp-dark text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base">Ajuste de Stock y Costos Unitarios</h3>
+                <button onclick="closeModal('modal-edit-stock')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-edit-stock" onsubmit="saveStockAdjustment(event)" class="p-6 space-y-4">
+                <input type="hidden" id="stock-adjust-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Producto</label>
+                    <input type="text" id="stock-adjust-name" disabled class="w-full bg-slate-100 border border-slate-300 rounded px-3 py-2 text-sm text-slate-700 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Stock Disponible</label>
+                    <input type="number" id="stock-adjust-qty" min="0" step="0.25" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Costo Estándar (C$)</label>
+                        <input type="number" id="stock-adjust-std-cost" min="0" step="0.05" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Costo Real (C$)</label>
+                        <input type="number" id="stock-adjust-real-cost" min="0" step="0.05" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-edit-stock')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-xs font-medium shadow">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Crear Orden PO -->
+    <div id="modal-create-po" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-erp-dark text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base">Nueva Orden de Compra (PO)</h3>
+                <button onclick="closeModal('modal-create-po')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-create-po" onsubmit="submitNewPO(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Proveedor</label>
+                    <select id="po-supplier" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="Maderas y Muebles S.A.">Maderas y Muebles S.A.</option>
+                        <option value="Ferretería Industrial Managua S.A.">Ferretería Industrial Managua S.A.</option>
+                        <option value="Recubrimientos y Barnices Centroamericanos">Recubrimientos y Barnices Centroamericanos</option>
+                        <option value="Empaques Corrugados Kraft Nic">Empaques Corrugados Kraft Nic</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Materia Prima / Insumo</label>
+                    <select id="po-material" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cantidad a Comprar</label>
+                    <input type="number" id="po-qty" min="1" value="20" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-create-po')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-xs font-medium shadow">Generar Orden PO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Crear Orden MO -->
+    <div id="modal-create-mo" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-erp-dark text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base">Crear Orden de Fabricación (MO)</h3>
+                <button onclick="closeModal('modal-create-mo')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-create-mo" onsubmit="submitNewMO(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Producto o Subensamble a Fabricar</label>
+                    <select id="mo-product" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cantidad del Lote (Unidades)</label>
+                    <input type="number" id="mo-qty" min="1" value="5" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-create-mo')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-xs font-medium shadow">Lanzar Orden WH/MO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Crear Orden de Venta (SO) y Despacho (WH/OUT) -->
+    <div id="modal-create-so" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-erp-dark text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base">Nueva Orden de Venta (SO) y Despacho (WH/OUT)</h3>
+                <button onclick="closeModal('modal-create-so')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-create-so" onsubmit="submitNewSO(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cliente</label>
+                    <select id="so-customer" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="OfiErgo Distribuidores S.A.">OfiErgo Distribuidores S.A.</option>
+                        <option value="Corporación Tecnológica Masaya">Corporación Tecnológica Masaya</option>
+                        <option value="Tienda En Línea EcoWork Nicaragua">Tienda En Línea EcoWork Nicaragua</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Lote de Producto Terminado</label>
+                    <select id="so-lot" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Cantidad a Despachar</label>
+                    <input type="number" id="so-qty" min="1" value="5" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-create-so')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded text-xs font-medium shadow">Confirmar Venta y Despachar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Registrar Inspección de Calidad -->
+    <div id="modal-quality-check" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-slate-200">
+            <div class="bg-erp-dark text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base">Registrar Inspección de Calidad</h3>
+                <button onclick="closeModal('modal-quality-check')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-quality-check" onsubmit="submitQualityInspection(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Código de Lote</label>
+                    <input type="text" id="qc-lot" value="LOT-MO-00001" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Unidades Evaluadas</label>
+                        <input type="number" id="qc-inspected-qty" min="1" value="5" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Unidades con Defecto</label>
+                        <input type="number" id="qc-reworked-qty" min="0" value="0" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Descripción del Defecto / Incidencia</label>
+                    <input type="text" id="qc-defect" placeholder="Ej. Desalineación en perforación de ejes" required class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Disposición Final</label>
+                    <select id="qc-disposition" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        <option value="Liberación Directa (Conforme)">Liberación Directa (Conforme)</option>
+                        <option value="Retrabajo (Ajuste manual)">Retrabajo (Ajuste manual en banco)</option>
+                        <option value="Desecho / Scrap">Desecho (Scrap por grieta profunda)</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('modal-quality-check')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-xs font-medium">Cancelar</button>
+                    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded text-xs font-medium shadow">Guardar Inspección</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="assets/app.js"></script>
+</body>
+</html>
