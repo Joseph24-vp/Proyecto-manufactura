@@ -1,0 +1,76 @@
+ECOLIFT DUAL — ERP / MES / SCADA simulado
+========================================
+INSTALACIÓN RÁPIDA (Windows + XAMPP)
+
+1) Inicie XAMPP y active Apache y MySQL (ambos deben aparecer en verde).
+2) Copie la carpeta ECOLIFT completa en:
+      C:\xampp\htdocs\ECOLIFT\
+   Deberá existir el archivo C:\xampp\htdocs\ECOLIFT\index.html.
+3) Abra en su navegador:
+      http://localhost/phpmyadmin/
+   Haga clic en IMPORTAR y seleccione:
+      C:\xampp\htdocs\ECOLIFT\database\schema_mysql_ecolift.sql
+   Pulse Continuar. El script crea la base ecolift_erp_mes y sus 12 tablas.
+   IMPORTANTE: úselo solo en la primera instalación; NO lo vuelva a importar
+   sobre una base existente sin respaldo. Esta versión NO usa DROP DATABASE.
+4) Compruebe la conexión abriendo:
+      http://localhost/ECOLIFT/diagnostico.php
+   Debe indicar «Instalación preparada», conexión y 12 tablas.
+5) Abra el sistema:
+      http://localhost/ECOLIFT/
+   El indicador superior debe decir «MySQL conectado».
+
+CONFIGURACIÓN DE MYSQL
+- Archivo: C:\xampp\htdocs\ECOLIFT\config.php
+- Normalmente XAMPP usa host 127.0.0.1, puerto 3306, usuario root y clave vacía.
+- Si cambió el puerto o la contraseña de MySQL, modifique solo config.php.
+- PHP debe tener habilitada la extensión pdo_mysql (incluida normalmente con XAMPP).
+- No abra index.html por doble clic: necesita Apache y PHP.
+
+PRUEBA RÁPIDA DE EXTREMO A EXTREMO
+- El escenario de ejemplo tiene una orden de producción pendiente WH/MO/00002,
+  subensambles suficientes y un lote anterior ya vendido.
+- Vaya a Manufactura (MO) y pulse Producir en WH/MO/00002.
+- Vaya a MES, OEE & Calidad, abra Registrar Inspección, elija el lote nuevo,
+  indique 5 unidades sin defectos y guarde (puede escribir «Sin defectos»).
+- Vaya a Ventas & Despacho, cree una venta para un cliente y el nuevo lote,
+  cantidad 5; confirme el despacho.
+- En la tabla de ventas pulse Comprobante para imprimir o guardar PDF.
+- Regrese a Catálogo: el producto terminado habrá disminuido tras la venta.
+- Puede crear una nueva compra en Compras, recibirla y confirmar que aumenta
+  el stock; para producir más, fabrique SUB-MAD, SUB-ART y SUB-EMP antes de PROD-DUAL.
+
+MODULOS DISPONIBLES
+1. Catálogo de productos y matriz BOM de tres niveles.
+2. Compras y recepción WH/IN con registro en MySQL.
+3. Manufactura WH/MO con verificación y descuento atómico de inventario.
+4. Ventas SO / Despacho WH/OUT con liberación de calidad.
+5. Lotes y trazabilidad de movimientos.
+6. MES, KPIs, inspecciones y simulación de temperatura/humedad.
+
+PROTECCIÓN DE DATOS
+- «Actualizar datos» solamente consulta MySQL: NO borra el inventario.
+- No se pueden borrar ventas despachadas, órdenes ya ejecutadas ni lotes
+  históricos desde el panel, para no perder trazabilidad.
+- Haga respaldo de su base desde phpMyAdmin antes de experimentar.
+- Es un prototipo académico local, sin login ni controles para Internet pública.
+- Los datos SCADA no provienen de sensores físicos: se generan en JavaScript.
+- Los valores KPI de la semilla corresponden a un escenario de validación
+  piloto. Verifique supuestos y métricas antes de usarlos como cifras reales.
+
+ARCHIVOS IMPORTANTES
+  index.html                     -> Interfaz y navegación.
+  assets/tailwind.css            -> Estilos locales sin depender del CDN.
+  assets/style.css               -> Diseño visual personalizado.
+  assets/app.js                  -> Interacción de módulos y API REST.
+  api.php                        -> Backend PHP + PDO que consulta/guarda MySQL.
+  config.php                     -> Configuración de conexión.
+  diagnostico.php                -> Prueba de instalación y tablas.
+  database/schema_mysql_ecolift.sql -> Creación e importación inicial de la BD.
+
+COMPROBACIONES REALIZADAS EN PREPARACIÓN
+- Análisis sintáctico PHP: api.php, config.php y diagnostico.php sin errores.
+- Análisis sintáctico JavaScript: assets/app.js sin errores.
+- Revisión estática de estructura HTML y referencias a recursos.
+- No se ha hecho una ejecución completa de compras/producción/ventas sobre
+  MySQL de su computadora; esa prueba debe hacerse en su XAMPP con pasos arriba.

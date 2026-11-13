@@ -1,0 +1,51 @@
+/* ECOLIFT DUAL · Apariencia compacta para demostración en XAMPP
+   Tailwind sigue controlando la retícula; estos estilos refinan la interfaz. */
+:root { --ink:#12233c; --muted:#64748b; --green:#059669; --line:#e3eaf1; }
+* { box-sizing:border-box; }
+body { font-family:'Inter',Arial,sans-serif; background:linear-gradient(180deg,#f3f8fb 0%,#f8fafc 54%,#eef4f6 100%); color:var(--ink); }
+header.bg-erp-dark { background:linear-gradient(110deg,#0d2038,#102e43 57%,#0b423c) !important; border-bottom:1px solid rgba(255,255,255,.1); }
+header h1 { letter-spacing:-.03em; }
+header .bg-emerald-500 { background:linear-gradient(140deg,#34d399,#a7f3d0); box-shadow:0 3px 12px rgba(0,0,0,.2); }
+section.bg-erp-navy { background:#102a40 !important; }
+section.bg-erp-navy .bg-slate-800\/60 { background:rgba(15,23,42,.43); border:1px solid rgba(148,163,184,.17); border-radius:10px; }
+.connection-pill { display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.01em;padding:8px 10px;border-radius:8px;white-space:nowrap; }
+.connection-pill.connected { color:#b7f7d4;background:rgba(5,150,105,.16);border:1px solid rgba(52,211,153,.25); }
+.connection-pill.disconnected { color:#ffe1dd;background:rgba(244,63,94,.14);border:1px solid rgba(251,113,133,.24); }
+.connection-dot { height:8px;width:8px;flex:none;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(255,255,255,.06); }
+.welcome-strip { display:flex;gap:16px;align-items:center;justify-content:space-between;min-height:116px;padding:21px 25px;margin-bottom:16px;border-radius:14px;background:linear-gradient(120deg,#effcf6 0%,#f4f8ff 66%,#eff7fb 100%);border:1px solid #dcebe8;box-shadow:0 4px 15px rgba(15,55,55,.045); }
+.welcome-strip .eyebrow { font-size:10px;letter-spacing:.13em;font-weight:800;color:#047857;margin-bottom:5px; }
+.welcome-strip h2 { font-size:clamp(17px,2vw,22px);font-weight:800;letter-spacing:-.04em;line-height:1.25;color:#10233d; }
+.welcome-strip p:not(.eyebrow) { font-size:12px;color:#64748b;margin-top:7px; }
+.welcome-icon { display:grid;place-items:center;height:64px;width:64px;background:#dff7ed;color:#047857;border:1px solid #c3ebda;border-radius:18px;flex:none;font-size:26px; }
+.tab-btn { font-size:12px;min-height:44px;white-space:nowrap;transition:background .16s,color .16s,box-shadow .16s; }
+.tab-btn.bg-indigo-50 { background:#eaf7f1 !important;color:#047857 !important;border-color:#b8e4cf !important;box-shadow:inset 0 -2px 0 #059669; }
+.tab-btn:hover { background:#edf6f9; }
+.tab-content > div.bg-white, .tab-content > div.border { border-color:#e2eaf0 !important;box-shadow:0 3px 12px rgba(15,23,42,.045);border-radius:12px !important; }
+.tab-content h2 { letter-spacing:-.03em; }
+.tab-content h3 { letter-spacing:-.015em; }
+.tab-content button, .tab-content select, .tab-content input, .tab-content textarea { transition:box-shadow .15s,border-color .15s,background .15s,transform .12s; }
+.tab-content button:hover { filter:brightness(.97); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline:2px solid #10b981;outline-offset:2px; }
+button { touch-action:manipulation; }
+table thead th { color:#52627a;letter-spacing:.02em;white-space:nowrap; }
+table tbody td { line-height:1.4; }
+table tbody tr:hover { background:#f5fbf9 !important; }
+input,select,textarea { color:#142641; }
+input[type=number] { font-variant-numeric:tabular-nums; }
+.fixed.inset-0 .bg-white { max-height:90vh;overflow-y:auto;box-shadow:0 25px 75px rgba(7,25,44,.30); }
+.fixed.inset-0 .bg-white input, .fixed.inset-0 .bg-white select { border-radius:7px; }
+#toast-container { max-width:min(90vw,450px);z-index:100; }
+#toast-container > div { border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 28px rgba(15,23,42,.19);line-height:1.5; }
+.custom-scrollbar::-webkit-scrollbar { width:6px;height:6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background:#f1f5f9; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background:#cbd5e1;border-radius:6px; }
+@media (max-width:680px) {
+ .welcome-strip { padding:16px 18px;min-height:95px; }
+ .welcome-icon { width:47px;height:47px;font-size:20px; }
+ .welcome-strip p:not(.eyebrow) { font-size:11px; }
+ .connection-pill { padding:5px 7px;font-size:10px;max-width:145px; }
+ .tab-btn { min-width:125px; }
+ table { font-size:12px; }
+ .tab-content > div.flex { gap:12px; }
+}
+@media print { header, section.bg-erp-navy, .welcome-strip, .tab-btn, #toast-container { display:none !important; } body { background:white; } }
